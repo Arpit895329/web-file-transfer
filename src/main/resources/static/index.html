@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Transfer</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- Global & Body --- */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #1a2a3a 0%, #0a1118 100%); /* Dark, gradient background */
+            color: #e0e6eb; /* Light text for dark background */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center; /* Center the content vertically */
+            padding: 2rem;
+            min-height: 100vh;
+            overflow-x: hidden; /* Prevent horizontal scroll */
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #61dafb; /* Electric blue for main title */
+            text-shadow: 0 0 15px rgba(97, 218, 251, 0.4); /* Subtle glow */
+            margin-bottom: 2rem; /* Increased margin */
+            animation: fadeIn 1s ease-out;
+        }
+
+        h2 {
+            font-size: 2rem;
+            color: #9bd0f7; /* Lighter blue for section titles */
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+
+        /* --- NEW: Horizontal Layout Container --- */
+        .app-container {
+            display: flex;
+            flex-direction: row; /* This is the key change */
+            justify-content: center;
+            align-items: flex-start; /* Aligns cards to the top */
+            gap: 2.5rem; /* Space between the two cards */
+            width: 100%;
+            max-width: 1200px; /* Max width for side-by-side layout */
+            flex-wrap: wrap; /* Allows cards to stack on small screens */
+        }
+
+        /* --- Main Containers (Cards) --- */
+        .container {
+            background: rgba(25, 38, 51, 0.8); /* Slightly transparent dark background */
+            backdrop-filter: blur(8px); /* Frosted glass effect */
+            border-radius: 16px;
+            box-shadow: 0 0 30px rgba(0, 150, 255, 0.15), 0 0 60px rgba(0, 150, 255, 0.08); /* Blue outer glow */
+            border: 1px solid rgba(0, 150, 255, 0.3); /* Subtle blue border */
+            padding: 3rem;
+            width: 100%;
+            max-width: 550px; /* Max width for each card */
+            flex: 1; /* Allows cards to grow and shrink */
+            min-width: 400px; /* Prevents cards from getting too small */
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            overflow: hidden; /* For inner glows */
+        }
+
+        .container::before { /* Inner glow effect */
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(97, 218, 251, 0.1) 0%, transparent 70%);
+            transform: rotate(45deg);
+            opacity: 0.2;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+        }
+
+        .container:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 10px 40px rgba(0, 150, 255, 0.25), 0 10px 80px rgba(0, 150, 255, 0.15);
+            border-color: rgba(0, 150, 255, 0.5);
+        }
+        .container:hover::before {
+            opacity: 0.4;
+        }
+
+
+        /* --- Buttons --- */
+        button {
+            width: 100%;
+            color: white;
+            padding: 16px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        button::before { /* Animated glow on hover */
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: -20px;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: scale(0);
+            opacity: 0;
+            transition: width 0.4s ease-out, height 0.4s ease-out, transform 0.4s ease-out, opacity 0.4s ease-out;
+            z-index: -1;
+        }
+
+        button:hover::before {
+            width: 150%;
+            height: 150%;
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        button:hover {
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active {
+            transform: translateY(-1px) scale(0.99);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        #upload-button {
+            background: linear-gradient(90deg, #007bff, #00c6ff); /* Gradient blue */
+            box-shadow: 0 0 15px rgba(0, 123, 255, 0.4);
+        }
+        #upload-button:hover {
+            background: linear-gradient(90deg, #0056b3, #0099e6);
+            box-shadow: 0 0 25px rgba(0, 123, 255, 0.6);
+        }
+
+        #download-button {
+            background: linear-gradient(90deg, #28a745, #2edb6d); /* Gradient green */
+            box-shadow: 0 0 15px rgba(40, 167, 69, 0.4);
+        }
+        #download-button:hover {
+            background: linear-gradient(90deg, #218838, #25a850);
+            box-shadow: 0 0 25px rgba(40, 167, 69, 0.6);
+        }
+
+        /* --- Form Inputs --- */
+        input[type="text"] {
+            width: 100%;
+            padding: 14px 18px;
+            margin-bottom: 1.5rem;
+            border: 1px solid #3a4f66;
+            border-radius: 10px;
+            font-size: 1.05rem;
+            background-color: #1a2a3a;
+            color: #e0e6eb;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        input[type="text"]::placeholder {
+            color: #8c9fae;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #61dafb;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3), 0 0 10px rgba(97, 218, 251, 0.5);
+        }
+
+        /* --- Futuristic File Input --- */
+        /* Custom file input button container */
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+            margin-bottom: 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            z-index: 2; /* Make sure it's clickable */
+        }
+
+        .file-input-wrapper .custom-file-button {
+            background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%); /* Purple-blue gradient */
+            color: white;
+            padding: 16px 20px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(106, 17, 203, 0.4);
+            display: block; /* Ensures it takes full width */
+            pointer-events: none; /* Don't intercept clicks, let input[type="file"] handle it */
+        }
+
+        .file-input-wrapper:hover .custom-file-button {
+            background: linear-gradient(90deg, #5c0fba 0%, #1e5fc7 100%);
+            box-shadow: 0 0 25px rgba(106, 17, 203, 0.6);
+            transform: translateY(-2px);
+        }
+
+
+        /* --- Upload Result Section --- */
+        #upload-result {
+            display: none;
+            margin-top: 2rem;
+            border-top: 1px dashed #3a4f66;
+            padding-top: 2rem;
+            text-align: center;
+            animation: fadeIn 0.8s ease-out forwards; /* Fade in the whole result section */
+        }
+
+        #upload-result h3 {
+            font-size: 1.4rem;
+            color: #a7d9f7;
+            font-weight: 600;
+            margin-bottom: 1.2rem;
+        }
+
+        #access-code {
+            font-family: 'Space Mono', monospace; /* More futuristic font for code */
+            font-size: 2.8rem;
+            font-weight: 700;
+            color: #39ff14; /* Neon green */
+            background: rgba(57, 255, 20, 0.1); /* Subtle neon background */
+            padding: 12px 25px;
+            border-radius: 10px;
+            border: 2px solid #39ff14; /* Neon green border */
+            display: inline-block;
+            letter-spacing: 3px;
+            margin-bottom: 2rem;
+            box-shadow: 0 0 20px rgba(57, 255, 20, 0.6); /* Stronger glow */
+            animation: pulseCode 1.5s infinite alternate; /* Subtle pulse animation */
+        }
+
+        #qr-image {
+            max-width: 280px; /* Slightly larger */
+            margin: 0 auto;
+            display: block;
+            border-radius: 12px;
+            box-shadow: 0 0 25px rgba(97, 218, 251, 0.5), 0 0 10px rgba(255,255,255,0.1); /* Blue glow around QR */
+            border: 2px solid #61dafb;
+            transform: scale(0.8); /* Start smaller */
+            opacity: 0; /* Start hidden */
+            animation: qrReveal 0.8s ease-out 0.5s forwards; /* Animated reveal */
+        }
+
+        #upload-result p {
+            margin-top: 1.5rem;
+            font-size: 1rem;
+            color: #aebecd;
+            line-height: 1.6;
+        }
+
+        /* --- Status Messages (Error / Loading) --- */
+        #upload-status {
+            margin-top: 1.5rem;
+            font-size: 1rem;
+            font-weight: 500;
+            text-align: center;
+            height: 1.5em; /* Reserve space */
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .status-error {
+            color: #ff4d4f; /* Modern red */
+            font-weight: 600;
+        }
+        
+        .status-uploading {
+            color: #61dafb; /* Electric blue */
+            font-weight: 600;
+            animation: pulseText 1s infinite alternate;
+        }
+
+        /* --- Keyframe Animations --- */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulseCode {
+            from { box-shadow: 0 0 15px rgba(57, 255, 20, 0.5); }
+            to { box-shadow: 0 0 30px rgba(57, 255, 20, 0.8), 0 0 5px rgba(57, 255, 20, 0.3); }
+        }
+
+        @keyframes qrReveal {
+            from { opacity: 0; transform: scale(0.7) rotateY(30deg); }
+            to { opacity: 1; transform: scale(1) rotateY(0deg); }
+        }
+
+        @keyframes pulseText {
+            from { opacity: 0.7; }
+            to { opacity: 1; }
+        }
+
+        /* --- Media Query for Responsiveness --- */
+        /* On screens smaller than 850px, stack the cards */
+        @media (max-width: 850px) {
+            .app-container {
+                flex-direction: column; /* Stack them vertically */
+                align-items: center; /* Center them */
+                gap: 2rem;
+            }
+            .container {
+                min-width: 300px; /* Allow cards to be smaller */
+                width: 100%; /* Take full width */
+                max-width: 500px; /* Constrain width */
+            }
+            h1 {
+                font-size: 2.5rem;
+            }
+            h2 {
+                font-size: 1.75rem;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>File Transfer</h1>
+
+    <div class="app-container">
+
+        <div class="container">
+            <h2>📤 Send File</h2>
+            
+            <div class="file-input-wrapper">
+                <input type="file" id="file-input">
+                <div class="custom-file-button">Choose File to Upload</div>
+            </div>
+
+            <button id="upload-button">Upload</button>
+
+            <div id="upload-result">
+                <h3>Your code is:</h3>
+                <span id="access-code"></span>
+                <img id="qr-image" src="" alt="QR Code">
+                <p>Scan the QR code or share the code to download.</p>
+            </div>
+            <div id="upload-status"></div>
+        </div>
+
+        <div class="container">
+            <h2>📥 Receive File</h2>
+            <input type="text" id="code-input" placeholder="Enter 6-digit code">
+            <button id="download-button">Download</button>
+        </div>
+
+    </div> <script>
+    const fileInput = document.getElementById('file-input');
+    const uploadButton = document.getElementById('upload-button');
+    const downloadButton = document.getElementById('download-button');
+    const codeInput = document.getElementById('code-input');
+    
+    const uploadResult = document.getElementById('upload-result');
+    const uploadStatus = document.getElementById('upload-status');
+    const accessCode = document.getElementById('access-code');
+    const qrImage = document.getElementById('qr-image');
+
+    // --- UPLOAD LOGIC ---
+    uploadButton.addEventListener('click', async () => {
+        const file = fileInput.files[0];
+        if (!file) {
+            uploadStatus.textContent = 'Please select a file first.';
+            uploadStatus.className = 'status-error';
+            return;
+        }
+
+        uploadStatus.textContent = 'Uploading...';
+        uploadStatus.className = 'status-uploading';
+        uploadResult.style.display = 'none';
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error('Upload failed. Server responded with ' + response.status);
+            }
+
+            const data = await response.json();
+            
+            // Display results
+            accessCode.textContent = data.code;
+            qrImage.src = data.qrCodeBase64;
+            uploadResult.style.display = 'block'; // Make sure this is set BEFORE the animation runs
+            uploadStatus.textContent = '';
+            uploadStatus.className = '';
+            fileInput.value = ''; // Clear the file input
+
+            // Reset custom file button text
+            document.querySelector('.custom-file-button').textContent = 'Choose File to Upload';
+
+        } catch (error) {
+            console.error('Upload error:', error);
+            uploadStatus.textContent = 'Upload failed. Please try again.';
+            uploadStatus.className = 'status-error';
+        }
+    });
+
+    // --- DOWNLOAD LOGIC ---
+    downloadButton.addEventListener('click', () => {
+        const code = codeInput.value.trim();
+        if (!code) {
+            // A more styled "alert"
+            codeInput.style.borderColor = '#ff4d4f';
+            codeInput.placeholder = 'Please enter a code!';
+            setTimeout(() => {
+                codeInput.style.borderColor = '#3a4f66';
+                codeInput.placeholder = 'Enter 6-digit code';
+            }, 2000);
+            return;
+        }
+        
+        window.location.href = `/api/download/${code}`;
+    });
+
+    // Update custom file button text on file selection
+    fileInput.addEventListener('change', (event) => {
+        const customButton = document.querySelector('.custom-file-button');
+        if (event.target.files.length > 0) {
+            customButton.textContent = event.target.files[0].name;
+        } else {
+            customButton.textContent = 'Choose File to Upload';
+        }
+    });
+</script>
+
+</body>
+</html>
